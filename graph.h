@@ -2,19 +2,17 @@
 #define GRAPH_H
 
 #include <QDebug>
-#include <QObject>
 
 #include "boundary.h"
 
 template <typename T> class Graph;
 
 template <typename T>
-class Graph : public QObject
+class Graph
 {
-    Q_OBJECT
 
 public:
-    Graph(const QVector<Boundary<T>*> &grph, QObject* parent = nullptr);
+    Graph(const QVector<Boundary<T>*> &grph);
 
     inline const QVector<Boundary<T>*>& getBounds() const { return m_bounds; }
     inline const QVector<T*>& getNodes() const { return  m_nodes; }
@@ -42,9 +40,8 @@ private:
 #include <QVector>
 
 template <typename T>
-Graph<T>::Graph(const QVector<Boundary<T>*> &graph, QObject* parent)
-    : QObject(parent),
-      m_bounds(graph)
+Graph<T>::Graph(const QVector<Boundary<T>*> &graph)
+    :m_bounds(graph)
 {
     typename QVector<Boundary<T>*>::const_iterator it = m_bounds.constBegin();
     for(; it != m_bounds.constEnd(); ++it){
