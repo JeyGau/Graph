@@ -3,6 +3,7 @@
 
 #include <QtMath>
 #include <QDebug>
+#include <QString>
 
 template <typename T> class Boundary;
 
@@ -10,17 +11,24 @@ template <typename T>
 class Boundary
 {
 public:
-    static const Boundary<T>* NULL_BOUNDARY;
+    static  Boundary<T>* NULL_BOUNDARY;
 
     Boundary(T *src, T *dest, unsigned int dist, Boundary<T>* reversed = NULL_BOUNDARY);
+    Boundary(const Boundary &copy);
 
-    inline T *Source() const { return m_src; }
-    inline T *Destination() const { return m_dest; }
+    ~Boundary();
 
-    inline unsigned int Distance() const { return m_dist; }
+    inline T *Source()  { return m_src; }
+    inline T *Destination()  { return m_dest; }
 
-    QString toString() const;
+    inline unsigned int Distance()  { return m_dist; }
+
+    QString toString() ;
     Boundary<T> *getReversedBoundary();
+
+    Boundary<T>* addBound(Boundary<T>* bound);
+
+    inline Boundary<T>* operator-() { return getReversedBoundary(); }
 
 private:
     Boundary();
@@ -29,30 +37,51 @@ private:
     T *m_src;
     T *m_dest;
     unsigned int m_dist;
-    bool m_oneWay;
     Boundary<T>* m_reversedBound;
 
 };
 
-#include <QString>
-
 template <typename T>
-const Boundary<T>* Boundary<T>::NULL_BOUNDARY = new Boundary<T>();
+Boundary<T>* Boundary<T>::NULL_BOUNDARY = new Boundary<T>();
 
 template <typename T>
 Boundary<T>::Boundary()
-    :m_src(nullptr), m_dest(nullptr), m_dist(0), m_reversedBound(nullptr)
+    : m_src(nullptr),
+      m_dest(nullptr),
+      m_dist(0),
+      m_reversedBound(nullptr)
 {
 }
 
 template <typename T>
-Boundary<T>::Boundary(T *src, T *dest,  unsigned int dist, Boundary<T>* reversed)
-    :m_src(src), m_dest(dest), m_dist(dist), m_reversedBound(reversed)
+Boundary<T>::Boundary(T* src,
+                      T* dest,
+                      unsigned int dist,
+                      Boundary<T>* reversed)
+    : m_src(src),
+      m_dest(dest),
+      m_dist(dist),
+      m_reversedBound(reversed)
 {
 }
 
 template <typename T>
-QString Boundary<T>::toString() const
+Boundary<T>::Boundary(const Boundary<T> &copy)
+{
+    m_src = copy.m_src;
+    m_dest = copy.m_dest;
+
+    m_reversedBound = NULL_BOUNDARY;
+    m_dist = copy.m_dist;
+}
+
+template <typename T>
+Boundary<T>::~Boundary<T>()
+{
+}
+
+template <typename T>
+QString Boundary<T>::toString()
 {
     return "Boundary from pointer " + Source()
             + " to pointer " + Destination()
@@ -68,5 +97,23 @@ Boundary<T> * Boundary<T>::getReversedBoundary()
     return m_reversedBound;
 }
 
+template <typename T>
+Boundary<T>* Boundary<T>::addBound(Boundary<T>* bound)
+{    
+    if(bound == nullptr
+            || bound == NULL_BOUNDARY)
+        return NULL_BOUNDARY;
+
+    else if(bound->Destination() == Source())
+        return NULL_BOUNDARY;
+
+    else if(Destination() == bound->Source())
+        return new Boundary<T>(m_src,
+                               bound->Destination(),
+                               m_dist + bound->Distance());
+
+    else
+        return NULL_BOUNDARY;
+}
 
 #endif // BOUNDARY_H

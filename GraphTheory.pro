@@ -25,6 +25,7 @@ SOURCES +=
 
 HEADERS += \
         boundary.h \
+        centeredgraph.h \
         graph.h
 
 unix {
