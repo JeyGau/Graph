@@ -1,7 +1,8 @@
+
 #ifndef NEIGHBOURNODES_H
 #define NEIGHBOURNODES_H
 
-#include "boundary.h"
+#include "route.cpp"
 
 template <typename T> class Graph;
 
@@ -20,7 +21,6 @@ private:
     T* m_origin;
 
 };
-
 template <typename T>
 CenteredGraph<T>::CenteredGraph(T *from, Graph<T> *parent)
     : Graph<T> (parent->getBoundariesFromNode(from)),
@@ -39,18 +39,18 @@ template <typename T>
 void CenteredGraph<T>::add(CenteredGraph *graph)
 {
     if(this->getNodes().contains(graph->m_origin)){
-        typename QVector<Boundary<T>*>::const_iterator it = graph->m_bounds.constBegin();
-        Boundary<T> *bound = this->getDirectBoundary(m_origin, graph->m_origin);
+        typename QVector<Route<T>*>::const_iterator it = graph->m_bounds.constBegin();
+        Route<T> *bound = this->getDirectRoute(m_origin, graph->m_origin);
 
         for (; it != graph->m_bounds.constEnd(); ++it) {
-            Boundary<T> *tmpBound = bound->addBound(*it);
+            Route<T> *tmpBound = bound->addBound(*it);
 
-            if(tmpBound != Boundary<T>::NULL_BOUNDARY){
+            if(tmpBound != Route<T>::NULL_Route){
                 this->m_bounds.append(tmpBound);
                 this->addNodesFromBound(*tmpBound);
             }
         }
-        this->removeBoundary(bound);
+        this->removeRoute(bound);
     }
 }
 

@@ -5,8 +5,8 @@
 #include <QVector>
 #include <QObject>
 
-#include "boundary.h"
-#include "centeredgraph.h"
+#include "route.cpp"
+#include "centeredgraph.cpp"
 
 template <typename T> class CenteredGraph;
 template <typename T> class Graph;
@@ -16,44 +16,45 @@ class Graph
 {
 
 public:
-    Graph(QVector<Boundary<T>*> grph);
+    Graph(QVector<Route<T>*> grph);
     ~Graph();
 
-    inline  QVector<Boundary<T>*> getBounds() { return m_bounds; }
+    inline  QVector<Route<T>*> getBounds() { return m_bounds; }
     inline  QVector<T*> getNodes()  { return  m_nodes; }
 
     CenteredGraph<T>* getCenteredGraph(T* from);
 
-    void removeBoundary(Boundary<T>* bound);
+    void removeRoute(Route<T>* bound);
 
-    int getShortestItinerary_Dijkstra(T* src, T* dst);
+    int getFastestItinerary_Dijkstra(T* src, T* dst);
+    int getFastestItineray_Aco(T* src, T* dst);
 
-    QVector<Boundary<T>*> getBoundariesFromNode(T* from);
+    QVector<Route<T>*> getBoundariesFromNode(T* from);
 
 private:
-    Boundary<T> *getShortestBoundary() ;
+    Route<T> *getShortestRoute() ;
 
     void addReversedBoundaries();
 
 protected:
-    Boundary<T> *getDirectBoundary(T* src, T* dst) ;
+    Route<T> *getDirectRoute(T* src, T* dst) ;
 
     inline bool contains(T *node) { return m_bounds.contains(node); }
-    inline bool contains(Boundary<T> *bound) { return m_bounds.contains(bound); }
+    inline bool contains(Route<T> *bound) { return m_bounds.contains(bound); }
 
-    void addNodesFromBound(Boundary<T> &bound);
+    void addNodesFromBound(Route<T> &bound);
 
 protected:
-    QVector<Boundary<T>*> m_bounds;
+    QVector<Route<T>*> m_bounds;
     QVector<T*> m_nodes;
 };
 
 
 template <typename T>
-Graph<T>::Graph(QVector<Boundary<T>*> graph)
+Graph<T>::Graph(QVector<Route<T>*> graph)
     : m_bounds(graph)
 {
-    typename QVector<Boundary<T>*>::const_iterator it = graph.constBegin();
+    typename QVector<Route<T>*>::const_iterator it = graph.constBegin();
     for(; it != graph.constEnd(); ++it){
         addNodesFromBound(**it);
     }
@@ -77,7 +78,7 @@ Graph<T>::~Graph<T>()
 }
 
 template <typename T>
-void Graph<T>::addNodesFromBound(Boundary<T> &bound)
+void Graph<T>::addNodesFromBound(Route<T> &bound)
 {
     if(!m_nodes.contains(bound.Source())){
         m_nodes.append(bound.Source());
@@ -89,11 +90,11 @@ void Graph<T>::addNodesFromBound(Boundary<T> &bound)
 }
 
 template <typename T>
-Boundary<T> *Graph<T>::getDirectBoundary(T* src, T* dst)
+Route<T> *Graph<T>::getDirectRoute(T* src, T* dst)
 {
-    typename QVector<Boundary<T>*>::const_iterator it = m_bounds.constBegin();
+    typename QVector<Route<T>*>::const_iterator it = m_bounds.constBegin();
     for(; it != m_bounds.constEnd(); ++it){
-        Boundary<T> *tmpBound = (*it);
+        Route<T> *tmpBound = (*it);
 
         if(tmpBound->Source() == src
                 && tmpBound->Destination() == dst){
@@ -104,13 +105,13 @@ Boundary<T> *Graph<T>::getDirectBoundary(T* src, T* dst)
 }
 
 template <typename T>
-Boundary<T> *Graph<T>::getShortestBoundary()
+Route<T> *Graph<T>::getShortestRoute()
 {
-    Boundary<T> *shortestBound = m_bounds.first();
+    Route<T> *shortestBound = m_bounds.first();
 
-    typename QVector<Boundary<T>*>::const_iterator it = m_bounds.constBegin();
+    typename QVector<Route<T>*>::const_iterator it = m_bounds.constBegin();
     for(; it != m_bounds.constEnd(); ++it){
-        Boundary<T> *tmpBound = (*it);
+        Route<T> *tmpBound = (*it);
 
         if(tmpBound->Distance() < shortestBound->Distance()){
             shortestBound = tmpBound;
@@ -120,15 +121,15 @@ Boundary<T> *Graph<T>::getShortestBoundary()
 }
 
 template <typename T>
-int Graph<T>::getShortestItinerary_Dijkstra(T* src, T* dst)
+int Graph<T>::getFastestItinerary_Dijkstra(T* src, T* dst)
 {
     CenteredGraph<T> *tmpGraph = this->getCenteredGraph(src);
-    Boundary<T> *shortestBound;
+    Route<T> *shortestBound;
     int it = 0;
 
     do{
         qDebug() << "iteration " << ++it;
-        shortestBound = tmpGraph->getShortestBoundary();        
+        shortestBound = tmpGraph->getShortestRoute();
 
         CenteredGraph<T> *graph = new CenteredGraph<T>(shortestBound->Destination(), this);
         tmpGraph->add(graph);
@@ -145,27 +146,35 @@ int Graph<T>::getShortestItinerary_Dijkstra(T* src, T* dst)
 }
 
 template <typename T>
+int Graph<T>::getFastestItineray_Aco(T* src, T* dest)
+{
+    Q_UNUSED(src)
+    Q_UNUSED(dest)
+    return 0;
+}
+
+template <typename T>
 CenteredGraph<T>* Graph<T>::getCenteredGraph(T* from)
 {
     return new CenteredGraph<T>(from, this);
 }
 
 template <typename T>
-void Graph<T>::removeBoundary(Boundary<T>* bound)
+void Graph<T>::removeRoute(Route<T>* bound)
 {
     if(m_bounds.contains(bound))
         m_bounds.remove(m_bounds.indexOf(bound));
 }
 
 template <typename T>
-QVector<Boundary<T>*> Graph<T>::getBoundariesFromNode(T* from)
+QVector<Route<T>*> Graph<T>::getBoundariesFromNode(T* from)
 {
-    QVector<Boundary<T>*> boundaries;
+    QVector<Route<T>*> boundaries;
 
-    typename QVector<Boundary<T>*>::const_iterator it = m_bounds.constBegin();
+    typename QVector<Route<T>*>::const_iterator it = m_bounds.constBegin();
     for(; it != m_bounds.constEnd(); ++it){
-        if(static_cast<Boundary<T>*>(*it)->Source() == from){
-            boundaries.append(new Boundary<T>(**it));
+        if(static_cast<Route<T>*>(*it)->Source() == from){
+            boundaries.append(new Route<T>(**it));
         }
     }
     return boundaries;
@@ -174,12 +183,12 @@ QVector<Boundary<T>*> Graph<T>::getBoundariesFromNode(T* from)
 template <typename T>
 void Graph<T>::addReversedBoundaries()
 {
-    QVector<Boundary<T>*> tmpGraph = m_bounds;
-    typename QVector<Boundary<T>*>::const_iterator it = tmpGraph.constBegin();
+    QVector<Route<T>*> tmpGraph = m_bounds;
+    typename QVector<Route<T>*>::const_iterator it = tmpGraph.constBegin();
     for(; it != tmpGraph.constEnd(); ++it){
-        Boundary<T> *tmpBound = (*it);
-        if(tmpBound->getReversedBoundary() != Boundary<T>::NULL_BOUNDARY){
-            m_bounds.append(tmpBound->getReversedBoundary());
+        Route<T> *tmpBound = (*it);
+        if(tmpBound->getReversedRoute() != Route<T>::NULL_Route){
+            m_bounds.append(tmpBound->getReversedRoute());
         }
     }
 }
